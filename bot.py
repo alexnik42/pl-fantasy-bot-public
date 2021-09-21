@@ -1,14 +1,13 @@
 from datetime import datetime, timezone
 from flask import Flask, request
 import telebot
-import requests
-import dateutil.parser
 import time
 import os
 import logging
 import threading
 from time_conversions import *
 from update_deadline import *
+from parse_gameweeks import *
 
 TOKEN = os.getenv('TOKEN')
 BOT_URL = os.getenv('BOT_URL')
@@ -38,11 +37,7 @@ def send_commands(message):
 @bot.message_handler(commands=['deadline'])
 def send_deadline(message):
     msg = ''
-    res = requests.get(
-        "https://fantasy.premierleague.com/api/bootstrap-static/")
-    res = res.json()
-    gameweeks = [(dateutil.parser.isoparse(
-        r["deadline_time"]),  r["name"]) for r in res["events"]]
+    gameweeks = parse_gameweeks()
     curr_date = datetime.now(timezone.utc)
     for deadline, name in gameweeks:
         if (deadline - curr_date).total_seconds() > 0:
@@ -56,6 +51,8 @@ def send_deadline(message):
         current_hour = datetime.now().hour
         while True:
             time.sleep(15)
+            if datetime.now().hour() % 8 == 0:
+                gameweeks = parse_gameweeks()
             if datetime.now().hour != current_hour:
                 current_hour = datetime.now().hour
                 msg = update_deadline(gameweeks)
