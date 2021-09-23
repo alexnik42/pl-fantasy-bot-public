@@ -48,14 +48,15 @@ def send_deadline(message):
         bot.send_message(message.chat.id, msg, parse_mode='Markdown')
 
     def get_fixtures():
-        current_hour = datetime.now().hour
+        saved_minute = datetime.now().minute
         while True:
             time.sleep(15)
-            if datetime.now().hour() % 8 == 0:
+            if datetime.now().hour % 8 == 0:
                 gameweeks = parse_gameweeks()
-            if datetime.now().hour != current_hour:
-                current_hour = datetime.now().hour
-                msg = update_deadline(gameweeks)
+            curr_minute = datetime.now().minute
+            if curr_minute % 30 == 0 and curr_minute != saved_minute:
+                saved_minute = curr_minute
+                msg = update_deadline(gameweeks, curr_minute)
                 if msg != "":
                     bot.send_message(message.chat.id, msg,
                                      parse_mode='Markdown')
