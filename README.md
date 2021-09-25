@@ -12,7 +12,7 @@ Data is stored on Dropbox ([Dropbox API](https://www.dropbox.com/developers/)).
 
 ## Demo
 
-<img src="./example.jpeg" height="720" alt="bot example">
+<img src="./example.jpg" height="720" alt="bot example">
 <br>
 
 ## How to create a bot
