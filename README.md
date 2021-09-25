@@ -7,7 +7,8 @@ This bot will notify you about the time left before deadline to make transfers i
 
 All data is supplied by [Fantasy Premier League API](https://fantasy.premierleague.com/api/bootstrap-static/).
 
-Deployed to [Heroku](https://heroku.com/). 
+Server is hosted on [Heroku](https://heroku.com/). 
+Data is stored on Dropbox ([Dropbox API](https://www.dropbox.com/developers/)) 
 
 ## Demo
 
