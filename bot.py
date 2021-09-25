@@ -1,13 +1,14 @@
 from datetime import datetime, timezone
 from flask import Flask, request
 import telebot
-import time
 import os
 import logging
 import threading
+
 from time_conversions import *
 from update_deadline import *
 from parse_gameweeks import *
+from handle_subscriptions import *
 
 TOKEN = os.getenv('TOKEN')
 BOT_URL = os.getenv('BOT_URL')
@@ -28,14 +29,16 @@ def send_welcome(message):
 def send_commands(message):
     bot.send_message(
         message.chat.id, '*Available commands:*\n\n' +
-        '/deadline' + ' - To subscribe to deadline notifications. ' +
-        'Bot will send notifications 2 days, 1 day, 6 hours, 2 hours and 1 hour before deadline\n',
+        '/deadline' + ' - To get info on current deadline.\n' +
+        '/subscribe' + ' - To subscribe to deadline notifications. ' +
+        'Bot will send notifications 2 days, 1 day, 6 hours, 2 hours and 1 hour before deadline\n'
+        '/unsubscribe' + ' - To unsubscribe from deadline notifications\n',
         parse_mode='Markdown'
     )
 
 
 @bot.message_handler(commands=['deadline'])
-def send_deadline(message):
+def send_current_deadline(message):
     msg = ''
     gameweeks = parse_gameweeks()
     curr_date = datetime.now(timezone.utc)
@@ -47,44 +50,48 @@ def send_deadline(message):
     if msg != '':
         bot.send_message(message.chat.id, msg, parse_mode='Markdown')
 
-    def get_fixtures():
-        saved_minute = datetime.now().minute
-        while True:
-            time.sleep(15)
-            if datetime.now().hour % 8 == 0:
-                gameweeks = parse_gameweeks()
-            curr_minute = datetime.now().minute
-            if curr_minute % 30 == 0 and curr_minute != saved_minute:
-                saved_minute = curr_minute
-                msg = update_deadline(gameweeks, curr_minute)
-                if msg != "":
-                    bot.send_message(message.chat.id, msg,
-                                     parse_mode='Markdown')
+
+@bot.message_handler(commands=['subscribe'])
+def subscribe_to_notifications(message):
     for th in threading.enumerate():
-        if th.name == "{}_{}".format("deadline", message.chat.id):
+        if th.name == "{}_{}".format("d", message.chat.id):
+            bot.send_message(
+                message.chat.id, "You are already subscribed", parse_mode='Markdown')
             break
     else:
-        subscribe_to_notifications = threading.Thread(target=get_fixtures,
-                                                      name="{}_{}".format("deadline", message.chat.id))
+        subscribe_to_notifications = threading.Thread(target=send_notifications, args=(message.chat.id, bot, server.logger),
+                                                      name="{}_{}".format("d", message.chat.id))
         subscribe_to_notifications.start()
+        add_thread_to_file("{}_{}".format("d", message.chat.id))
+        bot.send_message(
+            message.chat.id, "You successfuly subscribed", parse_mode='Markdown')
+
+
+@bot.message_handler(commands=['unsubscribe'])
+def unsubscribe_to_notifications(message):
+    for th in threading.enumerate():
+        if th.name == "{}_{}".format("d", message.chat.id):
+            remove_thread_from_file(th.name)
+            bot.send_message(
+                message.chat.id, "You successfuly unsubscribed", parse_mode='Markdown')
+            return
+    bot.send_message(
+        message.chat.id, "You are not subscribed", parse_mode='Markdown')
 
 
 # Define logger
-logger = logging.getLogger('fantasy_deadline_log')
-logger.setLevel(logging.INFO)
-
-fh = logging.FileHandler("errors.log")
-fh.setLevel(logging.INFO)
-
-formatter = logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-fh.setFormatter(formatter)
-
-logger.addHandler(fh)
+logger = logging.getLogger('bot_logs.log')
+server.logger.handlers
+server.logger.setLevel(logging.INFO)
 
 # Run bot
 if __name__ == '__main__':
-    logger.info('Bot running...\n')
+    server.logger.info('Bot starting...')
+
+    server.logger.info('Restarting threads...')
+    restart_threads(server.logger, bot)
+
+    server.logger.info('Configuring server...')
 
     @server.route('/' + TOKEN, methods=['POST'])
     def getMessage():
