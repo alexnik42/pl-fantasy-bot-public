@@ -45,7 +45,7 @@ def send_current_deadline(message):
     for deadline, name in gameweeks:
         if (deadline - curr_date).total_seconds() > 0:
             msg = "Deadline for {} ({} Moscow Time) is in *{}*".format(name, utc_to_local(deadline).strftime(
-                '%d, %b %Y, %H:%M:%S'), parse_seconds((deadline - curr_date).total_seconds()))
+                '%A, %d %b %Y, %H:%M:%S'), parse_seconds((deadline - curr_date).total_seconds()))
             break
     if msg != '':
         bot.send_message(message.chat.id, msg, parse_mode='Markdown')

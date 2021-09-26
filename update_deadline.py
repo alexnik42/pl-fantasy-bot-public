@@ -12,6 +12,6 @@ def update_deadline(gameweeks, curr_minute):
             hours = get_difference_in_hours(deadline, curr_date) + 1
             if hours in [48, 24, 6, 2, 1] and deadline.minute == curr_minute:
                 msg = "Deadline for {} ({} Moscow Time) is in *{}*".format(name, utc_to_local(deadline).strftime(
-                    '%d, %b %Y, %H:%M:%S'), parse_seconds((deadline - curr_date).total_seconds()))
+                    '%A, %d %b %Y, %H:%M:%S'), parse_seconds((deadline - curr_date).total_seconds()))
             break
     return msg
