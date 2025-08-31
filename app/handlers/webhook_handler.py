@@ -48,8 +48,7 @@ def lambda_handler(event, context):
                     send_message(chat_id=chat_id, text=msg, parse_mode="Markdown")
 
             elif normalized in ("/live_table", "/live_table@fantasy_deadline_bot"):
-                # msg = get_live_table(chat_id)
-                msg = "Live table mode is not supported yet"
+                msg = get_live_table(chat_id)
                 if msg:
                     logging.info("Sending message: %s", msg)
                     send_message(chat_id=chat_id, text=msg, parse_mode="MarkdownV2")
